@@ -22,7 +22,7 @@ serve(async (req) => {
       notification.app_id = _OnesignalAppId_;
       notification.include_external_user_ids = [record.user_id];
       notification.contents = {
-        en: `You just spent $${record.price}!`,
+        en: `You just $${record.price}!`,
       };
       const onesignalApiRes = await onesignal.createNotification(notification);
 
