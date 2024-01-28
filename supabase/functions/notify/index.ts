@@ -1,4 +1,4 @@
-import { serve } from 'https://deno.land/std@0.131.0/http/server.ts'
+import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import * as OneSignal from 'https://esm.sh/@onesignal/node-onesignal@1.0.0-beta7'
 
 const _OnesignalAppId_ = Deno.env.get('ONESIGNAL_APP_ID')!
@@ -9,32 +9,51 @@ const configuration = OneSignal.createConfiguration({
   appKey: _OnesignalRestApiKey_,
 })
 
-const onesignal = new OneSignal.DefaultApi(configuration)
+const onesignal = new OneSignal.DefaultApi(configuration);
 
 serve(async (req) => {
   try {
-    const { record } = await req.json()
+    const { record } = await req.json();
 
-    // Build OneSignal notification object
-    const notification = new OneSignal.Notification()
-    notification.app_id = _OnesignalAppId_
-    notification.include_external_user_ids = [record.user_id]
-    notification.contents = {
-      en: `You just spent $${record.price}!`,
+    // Check if the user spent $200 or more
+    if (record.price >= 200) {
+      // Build OneSignal notification object for spending $200 or more
+      const notification = new OneSignal.Notification();
+      notification.app_id = _OnesignalAppId_;
+      notification.include_external_user_ids = [record.user_id];
+      notification.contents = {
+        en: `You just spent $${record.price}!`,
+      };
+      const onesignalApiRes = await onesignal.createNotification(notification);
+
+      return new Response(
+        JSON.stringify({ onesignalResponse: onesignalApiRes }),
+        {
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    } else {
+      // Build OneSignal notification object for spending less than $200
+      const notification = new OneSignal.Notification();
+      notification.app_id = _OnesignalAppId_;
+      notification.include_external_user_ids = [record.user_id];
+      notification.contents = {
+        en: `Hi there! You spent $${record.price}.`,
+      };
+      const onesignalApiRes = await onesignal.createNotification(notification);
+
+      return new Response(
+        JSON.stringify({ onesignalResponse: onesignalApiRes }),
+        {
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     }
-    const onesignalApiRes = await onesignal.createNotification(notification)
-
-    return new Response(
-      JSON.stringify({ onesignalResponse: onesignalApiRes }),
-      {
-        headers: { 'Content-Type': 'application/json' },
-      }
-    )
   } catch (err) {
-    console.error('Failed to create OneSignal notification', err)
+    console.error('Failed to create OneSignal notification', err);
     return new Response('Server error.', {
       headers: { 'Content-Type': 'application/json' },
       status: 400,
-    })
+    });
   }
-})
+});
