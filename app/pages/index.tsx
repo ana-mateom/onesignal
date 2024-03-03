@@ -107,6 +107,7 @@ const Home: NextPage = () => {
               <option value="100">$100</option>
               <option value="200">$200</option>
               <option value="300">$300</option>
+              <option value="400">$400</option>
             </select>
             <button
               type="submit"
